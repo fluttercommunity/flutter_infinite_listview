@@ -1,0 +1,16 @@
+name: example
+description: Flutter Infinite Listview Example
+version: 1.0.0+1
+
+dependencies:
+  infinite_listview:
+    path: ../
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
