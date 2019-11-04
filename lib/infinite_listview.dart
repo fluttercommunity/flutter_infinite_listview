@@ -23,6 +23,7 @@ class InfiniteListView extends StatelessWidget {
     int itemCount,
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
+    this.anchor = 0.0,
     this.cacheExtent,
   })  : positiveChildrenDelegate = SliverChildBuilderDelegate(
           itemBuilder,
@@ -53,6 +54,7 @@ class InfiniteListView extends StatelessWidget {
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     this.cacheExtent,
+    this.anchor = 0.0,
   })  : assert(itemBuilder != null),
         assert(separatorBuilder != null),
         itemExtent = null,
@@ -98,6 +100,9 @@ class InfiniteListView extends StatelessWidget {
   /// See: [ScrollView.cacheExtent]
   final double cacheExtent;
 
+  /// See: [ScrollView.anchor]
+  final double anchor;
+
   /// See: [ListView.childrenDelegate]
   final SliverChildDelegate negativeChildrenDelegate;
 
@@ -123,6 +128,7 @@ class InfiniteListView extends StatelessWidget {
             context: state,
             initialPixels: -offset.pixels,
             keepScrollOffset: controller.keepScrollOffset,
+            negativeScroll: true,
           );
 
           /// Keep the negative scrolling [Viewport] positioned to the [ScrollPosition].
@@ -135,13 +141,14 @@ class InfiniteListView extends StatelessWidget {
             children: <Widget>[
               Viewport(
                 axisDirection: flipAxisDirection(axisDirection),
-                anchor: 1.0,
+                anchor: 1.0 - anchor,
                 offset: negativeOffset,
                 slivers: negativeSlivers,
                 cacheExtent: cacheExtent,
               ),
               Viewport(
                 axisDirection: axisDirection,
+                anchor: anchor,
                 offset: offset,
                 slivers: slivers,
                 cacheExtent: cacheExtent,
@@ -169,7 +176,8 @@ class InfiniteListView extends StatelessWidget {
     }
     if (padding != null) {
       sliver = new SliverPadding(
-        padding: negative ? padding - EdgeInsets.only(bottom: padding.bottom) : padding - EdgeInsets.only(top: padding.top),
+        padding:
+            negative ? padding - EdgeInsets.only(bottom: padding.bottom) : padding - EdgeInsets.only(top: padding.top),
         sliver: sliver,
       );
     }
@@ -181,7 +189,8 @@ class InfiniteListView extends StatelessWidget {
     super.debugFillProperties(properties);
     properties.add(new EnumProperty<Axis>('scrollDirection', scrollDirection));
     properties.add(new FlagProperty('reverse', value: reverse, ifTrue: 'reversed', showName: true));
-    properties.add(new DiagnosticsProperty<ScrollController>('controller', controller, showName: false, defaultValue: null));
+    properties
+        .add(new DiagnosticsProperty<ScrollController>('controller', controller, showName: false, defaultValue: null));
     properties.add(new DiagnosticsProperty<ScrollPhysics>('physics', physics, showName: false, defaultValue: null));
     properties.add(new DiagnosticsProperty<EdgeInsetsGeometry>('padding', padding, defaultValue: null));
     properties.add(new DoubleProperty('itemExtent', itemExtent, defaultValue: null));
@@ -223,7 +232,9 @@ class _InfiniteScrollPosition extends ScrollPositionWithSingleContext {
     bool keepScrollOffset = true,
     ScrollPosition oldPosition,
     String debugLabel,
-  }) : super(
+    this.negativeScroll = false,
+  })  : assert(negativeScroll != null),
+        super(
           physics: physics,
           context: context,
           initialPixels: initialPixels,
@@ -232,8 +243,24 @@ class _InfiniteScrollPosition extends ScrollPositionWithSingleContext {
           debugLabel: debugLabel,
         );
 
+  final bool negativeScroll;
+
   void _forceNegativePixels(double value) {
     super.forcePixels(-value);
+  }
+
+  @override
+  void saveScrollOffset() {
+    if (!negativeScroll) {
+      super.saveScrollOffset();
+    }
+  }
+
+  @override
+  void restoreScrollOffset() {
+    if (!negativeScroll) {
+      super.restoreScrollOffset();
+    }
   }
 
   @override
