@@ -1,4 +1,5 @@
-[![Flutter Community: infinite_listview](https://fluttercommunity.dev/_github/header/infinite_listview)](https://github.com/fluttercommunity/community)
+
+[![Flutter Community: infinite_listview](https://fluttercommunity.dev/_github/header/infinite_listview?v1.0.1+1)](https://github.com/fluttercommunity/community)
 
 # Flutter Infinite ListView
 
