@@ -173,7 +173,7 @@ class InfiniteListView extends StatelessWidget {
       sliver = SliverList(delegate: negative ? negativeChildrenDelegate : positiveChildrenDelegate);
     }
     if (padding != null) {
-      sliver = new SliverPadding(
+      sliver = SliverPadding(
         padding: negative
             ? padding! - EdgeInsets.only(bottom: padding!.bottom)
             : padding! - EdgeInsets.only(top: padding!.top),
@@ -186,13 +186,13 @@ class InfiniteListView extends StatelessWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(new EnumProperty<Axis>('scrollDirection', scrollDirection));
-    properties.add(new FlagProperty('reverse', value: reverse, ifTrue: 'reversed', showName: true));
-    properties.add(new DiagnosticsProperty<ScrollController>('controller', controller, showName: false, defaultValue: null));
-    properties.add(new DiagnosticsProperty<ScrollPhysics>('physics', physics, showName: false, defaultValue: null));
-    properties.add(new DiagnosticsProperty<EdgeInsetsGeometry>('padding', padding, defaultValue: null));
-    properties.add(new DoubleProperty('itemExtent', itemExtent, defaultValue: null));
-    properties.add(new DoubleProperty('cacheExtent', cacheExtent, defaultValue: null));
+    properties.add(EnumProperty<Axis>('scrollDirection', scrollDirection));
+    properties.add(FlagProperty('reverse', value: reverse, ifTrue: 'reversed', showName: true));
+    properties.add(DiagnosticsProperty<ScrollController>('controller', controller, showName: false, defaultValue: null));
+    properties.add(DiagnosticsProperty<ScrollPhysics>('physics', physics, showName: false, defaultValue: null));
+    properties.add(DiagnosticsProperty<EdgeInsetsGeometry>('padding', padding, defaultValue: null));
+    properties.add(DoubleProperty('itemExtent', itemExtent, defaultValue: null));
+    properties.add(DoubleProperty('cacheExtent', cacheExtent, defaultValue: null));
   }
 }
 
@@ -211,7 +211,7 @@ class InfiniteScrollController extends ScrollController {
 
   @override
   ScrollPosition createScrollPosition(ScrollPhysics physics, ScrollContext context, ScrollPosition? oldPosition) {
-    return new _InfiniteScrollPosition(
+    return _InfiniteScrollPosition(
       physics: physics,
       context: context,
       initialPixels: initialScrollOffset,
