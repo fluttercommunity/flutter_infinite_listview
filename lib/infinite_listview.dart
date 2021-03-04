@@ -12,15 +12,15 @@ import 'package:flutter/widgets.dart';
 class InfiniteListView extends StatelessWidget {
   /// See [ListView.builder]
   InfiniteListView.builder({
-    Key key,
+    Key? key,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
-    InfiniteScrollController controller,
+    InfiniteScrollController? controller,
     this.physics,
     this.padding,
     this.itemExtent,
-    @required IndexedWidgetBuilder itemBuilder,
-    int itemCount,
+    required IndexedWidgetBuilder itemBuilder,
+    int? itemCount,
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     this.anchor = 0.0,
@@ -42,22 +42,20 @@ class InfiniteListView extends StatelessWidget {
 
   /// See [ListView.separated]
   InfiniteListView.separated({
-    Key key,
+    Key? key,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
-    InfiniteScrollController controller,
+    InfiniteScrollController? controller,
     this.physics,
     this.padding,
-    @required IndexedWidgetBuilder itemBuilder,
-    @required IndexedWidgetBuilder separatorBuilder,
-    int itemCount,
+    required IndexedWidgetBuilder itemBuilder,
+    required IndexedWidgetBuilder separatorBuilder,
+    int? itemCount,
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     this.cacheExtent,
     this.anchor = 0.0,
-  })  : assert(itemBuilder != null),
-        assert(separatorBuilder != null),
-        itemExtent = null,
+  })  : itemExtent = null,
         positiveChildrenDelegate = SliverChildBuilderDelegate(
           (BuildContext context, int index) {
             final itemIndex = index ~/ 2;
@@ -89,16 +87,16 @@ class InfiniteListView extends StatelessWidget {
   final InfiniteScrollController controller;
 
   /// See: [ScrollView.physics]
-  final ScrollPhysics physics;
+  final ScrollPhysics? physics;
 
   /// See: [BoxScrollView.padding]
-  final EdgeInsets padding;
+  final EdgeInsets? padding;
 
   /// See: [ListView.itemExtent]
-  final double itemExtent;
+  final double? itemExtent;
 
   /// See: [ScrollView.cacheExtent]
-  final double cacheExtent;
+  final double? cacheExtent;
 
   /// See: [ScrollView.anchor]
   final double anchor;
@@ -122,7 +120,7 @@ class InfiniteListView extends StatelessWidget {
       viewportBuilder: (BuildContext context, ViewportOffset offset) {
         return Builder(builder: (BuildContext context) {
           /// Build negative [ScrollPosition] for the negative scrolling [Viewport].
-          final state = Scrollable.of(context);
+          final state = Scrollable.of(context)!;
           final negativeOffset = _InfiniteScrollPosition(
             physics: scrollPhysics,
             context: state,
@@ -169,15 +167,16 @@ class InfiniteListView extends StatelessWidget {
     if (itemExtent != null) {
       sliver = SliverFixedExtentList(
         delegate: negative ? negativeChildrenDelegate : positiveChildrenDelegate,
-        itemExtent: itemExtent,
+        itemExtent: itemExtent!,
       );
     } else {
       sliver = SliverList(delegate: negative ? negativeChildrenDelegate : positiveChildrenDelegate);
     }
     if (padding != null) {
       sliver = new SliverPadding(
-        padding:
-            negative ? padding - EdgeInsets.only(bottom: padding.bottom) : padding - EdgeInsets.only(top: padding.top),
+        padding: negative
+            ? padding! - EdgeInsets.only(bottom: padding!.bottom)
+            : padding! - EdgeInsets.only(top: padding!.top),
         sliver: sliver,
       );
     }
@@ -189,8 +188,7 @@ class InfiniteListView extends StatelessWidget {
     super.debugFillProperties(properties);
     properties.add(new EnumProperty<Axis>('scrollDirection', scrollDirection));
     properties.add(new FlagProperty('reverse', value: reverse, ifTrue: 'reversed', showName: true));
-    properties
-        .add(new DiagnosticsProperty<ScrollController>('controller', controller, showName: false, defaultValue: null));
+    properties.add(new DiagnosticsProperty<ScrollController>('controller', controller, showName: false, defaultValue: null));
     properties.add(new DiagnosticsProperty<ScrollPhysics>('physics', physics, showName: false, defaultValue: null));
     properties.add(new DiagnosticsProperty<EdgeInsetsGeometry>('padding', padding, defaultValue: null));
     properties.add(new DoubleProperty('itemExtent', itemExtent, defaultValue: null));
@@ -204,7 +202,7 @@ class InfiniteScrollController extends ScrollController {
   InfiniteScrollController({
     double initialScrollOffset = 0.0,
     bool keepScrollOffset = true,
-    String debugLabel,
+    String? debugLabel,
   }) : super(
           initialScrollOffset: initialScrollOffset,
           keepScrollOffset: keepScrollOffset,
@@ -212,7 +210,7 @@ class InfiniteScrollController extends ScrollController {
         );
 
   @override
-  ScrollPosition createScrollPosition(ScrollPhysics physics, ScrollContext context, ScrollPosition oldPosition) {
+  ScrollPosition createScrollPosition(ScrollPhysics physics, ScrollContext context, ScrollPosition? oldPosition) {
     return new _InfiniteScrollPosition(
       physics: physics,
       context: context,
@@ -226,15 +224,14 @@ class InfiniteScrollController extends ScrollController {
 
 class _InfiniteScrollPosition extends ScrollPositionWithSingleContext {
   _InfiniteScrollPosition({
-    @required ScrollPhysics physics,
-    @required ScrollContext context,
+    required ScrollPhysics physics,
+    required ScrollContext context,
     double initialPixels = 0.0,
     bool keepScrollOffset = true,
-    ScrollPosition oldPosition,
-    String debugLabel,
+    ScrollPosition? oldPosition,
+    String? debugLabel,
     this.negativeScroll = false,
-  })  : assert(negativeScroll != null),
-        super(
+  }) : super(
           physics: physics,
           context: context,
           initialPixels: initialPixels,

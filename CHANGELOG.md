@@ -1,3 +1,6 @@
+## 1.1.0
+  * Add null safety.
+
 ## 1.0.1+1
   * Added New Flutter Community Banner.
 
