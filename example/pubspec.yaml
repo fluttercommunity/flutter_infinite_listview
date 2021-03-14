@@ -1,6 +1,9 @@
 name: example
 description: Flutter Infinite Listview Example
-version: 1.0.0+1
+version: 1.1.0
+
+environment:
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
   infinite_listview:
