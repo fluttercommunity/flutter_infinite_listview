@@ -112,7 +112,7 @@ class InfiniteListView extends StatelessWidget {
     final List<Widget> slivers = _buildSlivers(context, negative: false);
     final List<Widget> negativeSlivers = _buildSlivers(context, negative: true);
     final AxisDirection axisDirection = _getDirection(context);
-    final scrollPhysics = AlwaysScrollableScrollPhysics(parent: physics);
+    final scrollPhysics = physics ?? const AlwaysScrollableScrollPhysics();
     return Scrollable(
       axisDirection: axisDirection,
       controller: controller,
