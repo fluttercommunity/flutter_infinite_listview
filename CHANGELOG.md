@@ -1,5 +1,8 @@
 ## 1.1.0
   * Add null safety.
+  * Add new ListView parameters.
+  * Fixed default controller initialization bug.
+  * Widget can now be const.
 
 ## 1.0.1+1
   * Added New Flutter Community Banner.
