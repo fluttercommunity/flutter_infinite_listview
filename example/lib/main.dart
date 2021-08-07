@@ -23,6 +23,8 @@ class _ExampleScreenState extends State<ExampleScreen> {
     initialScrollOffset: 0.0,
   );
 
+  int _snappedTile = 0;
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -50,7 +52,7 @@ class _ExampleScreenState extends State<ExampleScreen> {
             tabs: <Widget>[
               Tab(text: 'First'),
               Tab(text: 'Second'),
-              Tab(text: 'Third'),
+              Tab(text: 'Snapping'),
             ],
           ),
         ),
@@ -58,7 +60,7 @@ class _ExampleScreenState extends State<ExampleScreen> {
           children: <Widget>[
             _buildTab(0),
             _buildTab(1),
-            _buildTab(2),
+            _buildSnapping(2),
           ],
         ),
       ),
@@ -84,5 +86,32 @@ class _ExampleScreenState extends State<ExampleScreen> {
       separatorBuilder: (BuildContext context, int index) => const Divider(height: 2.0),
       anchor: 0.5,
     );
+  }
+
+  Widget _buildSnapping(int tab){
+    return InfiniteListView.snapping(
+      key: PageStorageKey(tab),
+      controller: _infiniteController,
+      itemExtent: 80,
+      onSnap: (index) {
+        setState(() {
+          _snappedTile = index;
+        });
+      },
+      itemBuilder: (BuildContext context, int index) {
+        return Material(
+          child: InkWell(
+            onTap: () {},
+            child: ListTile(
+              tileColor: _snappedTile == index ? Colors.red : null,
+              title: Text('Tab $tab Item #$index'),
+              subtitle: Text('Subtitle $index'),
+              trailing: const Icon(Icons.chevron_right),
+            ),
+          ),
+        );
+      },
+      anchor: 0.5,
+    ); 
   }
 }

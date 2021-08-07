@@ -32,6 +32,9 @@ class InfiniteListView extends StatefulWidget {
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
     this.restorationId,
     this.clipBehavior = Clip.hardEdge,
+    this.snap = false,
+    this.snapTreshold = 20,
+    this.onSnap,
   })  : separatorBuilder = null,
         super(key: key);
 
@@ -56,6 +59,38 @@ class InfiniteListView extends StatefulWidget {
     this.restorationId,
     this.clipBehavior = Clip.hardEdge,
   })  : itemExtent = null,
+        snap = false,
+        snapTreshold = 0,
+        onSnap = null,
+        super(key: key);
+
+  /// Create a list view that snaps to the nearest child.
+  ///
+  /// The list snaps to the child when the delta beween two scroll events is
+  /// below [snapTreshold], which runs the [onSnap] callback.
+  const InfiniteListView.snapping({
+    Key? key,
+    this.scrollDirection = Axis.vertical,
+    this.reverse = false,
+    this.controller,
+    this.physics,
+    this.padding,
+    required this.itemExtent,
+    required this.itemBuilder,
+    this.itemCount,
+    this.addAutomaticKeepAlives = true,
+    this.addRepaintBoundaries = true,
+    this.addSemanticIndexes = true,
+    this.cacheExtent,
+    this.anchor = 0.0,
+    this.dragStartBehavior = DragStartBehavior.start,
+    this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
+    this.restorationId,
+    this.clipBehavior = Clip.hardEdge,
+    this.snapTreshold = 10,
+    this.onSnap,
+  })  : separatorBuilder = null,
+        snap = true,
         super(key: key);
 
   /// See: [ScrollView.scrollDirection]
@@ -112,6 +147,17 @@ class InfiniteListView extends StatefulWidget {
   /// See: [ScrollView.clipBehavior]
   final Clip clipBehavior;
 
+  /// Whether the list should snap to an item.
+  ///
+  /// The list snaps when the scroll velocity is below [snapTreshold].
+  final bool snap;
+
+  /// The scroll velocity treshold when the list should snap to an item.
+  final double snapTreshold;
+
+  /// Callback that runs when the list snaps to a child.
+  final void Function(int index)? onSnap;
+
   @override
   _InfiniteListViewState createState() => _InfiniteListViewState();
 }
@@ -120,6 +166,19 @@ class _InfiniteListViewState extends State<InfiniteListView> {
   InfiniteScrollController? _controller;
 
   InfiniteScrollController get _effectiveController => widget.controller ?? _controller!;
+
+  bool _pointerUp = true;
+
+  /// Keep track of if a listener has been added.
+  ///
+  /// This prevents the listener from beeing added on each rebuild.
+  bool _listenerAdded = false;
+
+  /// The offset the last time the listener fired.
+  double _latestOffset = 0.0;
+
+  /// The delta offset between the two latest scroll events.
+  double _deltaOffset = 0.0;
 
   @override
   void initState() {
@@ -146,54 +205,101 @@ class _InfiniteListViewState extends State<InfiniteListView> {
     super.dispose();
   }
 
+  /// Try to snap to the closest child.
+  ///
+  /// Is called when the pointer is lifted from the screen, and on each scroll event.
+  void _trySnap() {
+    if (_pointerUp && widget.snap && _deltaOffset.abs() < widget.snapTreshold) {
+      var indexOffset = _latestOffset / widget.itemExtent!;
+
+      // If scrolling forward.
+      if (_deltaOffset >= 0) {
+        indexOffset = indexOffset.ceilToDouble();
+      }
+      // If scrolling backwards.
+      else {
+        indexOffset = indexOffset.floorToDouble();
+      }
+
+      _effectiveController.animateTo(
+        indexOffset * widget.itemExtent!,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeOutQuint,
+      );
+
+      if (widget.onSnap != null) {
+        widget.onSnap!(indexOffset.toInt());
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> slivers = _buildSlivers(context, negative: false);
     final List<Widget> negativeSlivers = _buildSlivers(context, negative: true);
     final AxisDirection axisDirection = _getDirection(context);
     final scrollPhysics = widget.physics ?? const AlwaysScrollableScrollPhysics();
-    return Scrollable(
-      axisDirection: axisDirection,
-      controller: _effectiveController,
-      physics: scrollPhysics,
-      viewportBuilder: (BuildContext context, ViewportOffset offset) {
-        return Builder(builder: (BuildContext context) {
-          /// Build negative [ScrollPosition] for the negative scrolling [Viewport].
-          final state = Scrollable.of(context)!;
-          final negativeOffset = _InfiniteScrollPosition(
-            physics: scrollPhysics,
-            context: state,
-            initialPixels: -offset.pixels,
-            keepScrollOffset: _effectiveController.keepScrollOffset,
-            negativeScroll: true,
-          );
-
-          /// Keep the negative scrolling [Viewport] positioned to the [ScrollPosition].
-          offset.addListener(() {
-            negativeOffset._forceNegativePixels(offset.pixels);
-          });
-
-          /// Stack the two [Viewport]s on top of each other so they move in sync.
-          return Stack(
-            children: <Widget>[
-              Viewport(
-                axisDirection: flipAxisDirection(axisDirection),
-                anchor: 1.0 - widget.anchor,
-                offset: negativeOffset,
-                slivers: negativeSlivers,
-                cacheExtent: widget.cacheExtent,
-              ),
-              Viewport(
-                axisDirection: axisDirection,
-                anchor: widget.anchor,
-                offset: offset,
-                slivers: slivers,
-                cacheExtent: widget.cacheExtent,
-              ),
-            ],
-          );
-        });
+    return Listener(
+      onPointerDown: (_) => _pointerUp = false,
+      onPointerUp: (_) {
+        _pointerUp = true;
+        _trySnap();
       },
+      child: Scrollable(
+        axisDirection: axisDirection,
+        controller: _effectiveController,
+        physics: scrollPhysics,
+        viewportBuilder: (BuildContext context, ViewportOffset offset) {
+          return Builder(builder: (BuildContext context) {
+            /// Build negative [ScrollPosition] for the negative scrolling [Viewport].
+            final state = Scrollable.of(context)!;
+            final negativeOffset = _InfiniteScrollPosition(
+              physics: scrollPhysics,
+              context: state,
+              initialPixels: -offset.pixels,
+              keepScrollOffset: _effectiveController.keepScrollOffset,
+              negativeScroll: true,
+            );
+
+            if (!_listenerAdded) {
+              _listenerAdded = true;
+
+              offset.addListener(() {
+                _deltaOffset = offset.pixels - _latestOffset;
+
+                _latestOffset = offset.pixels;
+
+                _trySnap();
+              });
+            }
+
+            /// Keep the negative scrolling [Viewport] positioned to the [ScrollPosition].
+            offset.addListener(() {
+                negativeOffset._forceNegativePixels(offset.pixels);
+              });
+
+            /// Stack the two [Viewport]s on top of each other so they move in sync.
+            return Stack(
+              children: <Widget>[
+                Viewport(
+                  axisDirection: flipAxisDirection(axisDirection),
+                  anchor: 1.0 - widget.anchor,
+                  offset: negativeOffset,
+                  slivers: negativeSlivers,
+                  cacheExtent: widget.cacheExtent,
+                ),
+                Viewport(
+                  axisDirection: axisDirection,
+                  anchor: widget.anchor,
+                  offset: offset,
+                  slivers: slivers,
+                  cacheExtent: widget.cacheExtent,
+                ),
+              ],
+            );
+          });
+        },
+      ),
     );
   }
 
